@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Cake.Powershell" Version="1.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.14" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 

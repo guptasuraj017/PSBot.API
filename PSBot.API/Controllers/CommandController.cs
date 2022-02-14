@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using PSBot.API.Models;
 using System;
 using System.Collections;
@@ -13,8 +11,12 @@ using System.Linq;
 using System.Management.Automation;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json.Linq;
+
 namespace PSBot.API.Controllers
 {
+   
+
     [Route("api/[controller]")]
     [ApiController]
     public class CommandController : ControllerBase
@@ -36,9 +38,7 @@ namespace PSBot.API.Controllers
                 using (StreamReader r = new StreamReader(jsonFilePath)) 
                 {
                     var commandJson = r.ReadToEnd();
-                    
-                    var jsonResult = JsonConvert.SerializeObject(JObject.Parse(commandJson));
-                   
+                    var jsonResult = Newtonsoft.Json.JsonConvert.SerializeObject(JObject.Parse(commandJson));
                     return jsonResult;
                 }
                 
@@ -60,8 +60,11 @@ namespace PSBot.API.Controllers
 
             try
             {
+                
                 var result = RunCmdlets(command);
                 var baseObject = result[0].BaseObject;
+            
+                return null;
             }
             catch (Exception ex)
             {
@@ -82,8 +85,13 @@ namespace PSBot.API.Controllers
                     parameters.Add(parameter.ParameterName, @parameter.ParameterValue);
                 }
 
-                var ps = PowerShell.Create().AddCommand(command.Value).AddParameters(parameters).Invoke();
-                return ps;
+                using (PowerShell ps = PowerShell.Create())
+                {
+                    ps.AddCommand(command.Value).AddParameters(parameters);
+                    var outputCommand = GetPsCommand(ps);
+                    return ps.Invoke();
+                }
+                
             }
             catch (Exception ex)
             {
@@ -91,5 +99,27 @@ namespace PSBot.API.Controllers
                 return null;
             }
         }
+        
+        private static string GetPsCommand(PowerShell ps)
+        {
+            string cmdText = string.Empty;
+            for (int i = 0; i < ps.Commands.Commands.Count; i++)
+            {
+                var cmd = ps.Commands.Commands[i];
+                cmdText += cmd.CommandText;
+                foreach (var param in cmd.Parameters)
+                {
+                    if (!string.IsNullOrEmpty(param.Name))
+                        cmdText += " -" + param.Name + ":"; cmdText += param.Value;
+                }
+                if (cmd.IsEndOfStatement || i + 1 == ps.Commands.Commands.Count)
+                    cmdText += Environment.NewLine;
+                else
+                    cmdText += "|";
+            }
+            return cmdText;
+        }
+
+
     }
 }

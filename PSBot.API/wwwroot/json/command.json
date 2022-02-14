@@ -1,0 +1,42 @@
+{
+  "commands": [
+    {
+      "commandID": 1,
+      "key": "Create New Item",
+      "value": "New-Item",
+      "params": [
+        {
+          "parameterName": "Path",
+          "parameterValue": ""
+        },
+        {
+          "parameterName": "Name",
+          "parameterValue": ""
+        },
+        {
+          "parameterName": "ItemType",
+          "parameterValue": ""
+        },
+        {
+          "parameterName": "Value",
+          "parameterValue": ""
+        }
+      ]
+    },
+    {
+      "commandID": 1,
+      "key": "Create New VM",
+      "value": "Create-VM",
+      "params": [
+        {
+          "parameterName": "Name",
+          "parameterValue": ""
+        },
+        {
+          "parameterName": "VMType",
+          "parameterValue": ""
+        }
+      ]
+    }
+  ]
+}

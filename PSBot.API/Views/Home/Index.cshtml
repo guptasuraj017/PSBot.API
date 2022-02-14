@@ -1,0 +1,168 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<h2>Command List</h2>
+
+<div id="divResult">
+
+</div>
+
+<div id="mainDiv">
+
+</div>
+
+<ul id="ulDiv">
+</ul>
+
+
+
+@section scripts
+    {
+    <script>
+
+        $(document).ready(function () {
+            console.log("In Command Index page' script");
+            $.ajax({
+                url: 'https://localhost:44353/api/Command/GetAllCommands',
+                method: 'get',
+                success: function (data) {
+                    alert('Request posted succesfully');
+                    let result = JSON.parse(data).commands;
+                    console.log(result);
+                    bind(result);
+                }
+            })
+        });
+
+        function getCommand(commandId) {
+            $.ajax({
+                url: 'https://localhost:44353/api/Command/GetAllCommands',
+                method: 'get',
+                success: function (data) {
+                    let commands = JSON.parse(data).commands;
+                    let result = {};
+                    for (let command of commands) {
+                        if (command.commandId == commandId) {
+                            result = command;
+                            break;
+                        }
+                    }
+                    alert('in getCommand');
+                    console.log('Getting data from GetCommand');
+                    console.log(result);
+                    let form = document.createElement('form');
+                    form.setAttribute('id', 'formDiv');
+                    $('#mainDiv').append(form);
+
+                    let inpuElement = document.createElement('input');
+                    inpuElement.setAttribute('id', 'commandId');
+                    inpuElement.setAttribute('name', 'commandId');
+                    inpuElement.setAttribute('type', 'hidden');
+                    inpuElement.setAttribute('value', result.commandId);
+                    form.append(inpuElement);
+
+                    inpuElement = document.createElement('input');
+                    inpuElement.setAttribute('id', 'key');
+                    inpuElement.setAttribute('name', 'key');
+                    inpuElement.setAttribute('type', 'hidden');
+                    inpuElement.setAttribute('value', result.key);
+                    form.append(inpuElement);
+
+
+                    for (let parameter of result.params) {
+                        let labelElement = document.createElement('label');
+                        labelElement.setAttribute('for', parameter.parameterName);
+                        labelElement.append(parameter.parameterName);
+                        form.append(labelElement);
+
+                        inpuElement = document.createElement('input');
+                        inpuElement.setAttribute('id', parameter.parameterName);
+                        inpuElement.setAttribute('name', parameter.parameterName);
+                        inpuElement.setAttribute('type', 'text');
+                        form.append(inpuElement);
+                    }
+
+                    inpuElement = document.createElement('input');
+                    inpuElement.setAttribute('id', 'value');
+                    inpuElement.setAttribute('name', 'value');
+                    inpuElement.setAttribute('type', 'hidden');
+                    inpuElement.setAttribute('value', result.value);
+                    form.append(inpuElement);
+
+
+                    inpuElement = document.createElement('input');
+                    inpuElement.setAttribute('id', '_id');
+                    inpuElement.setAttribute('name', '_id');
+                    inpuElement.setAttribute('type', 'hidden');
+                    inpuElement.setAttribute('value', result._id);
+                    form.append(inpuElement);
+
+
+                    inpuElement = document.createElement('input');
+                    inpuElement.setAttribute('type', 'submit');
+                    inpuElement.setAttribute('value', 'run');
+                    form.append(inpuElement);
+
+
+
+                    formDiv.onsubmit = (e) => {
+                        e.preventDefault();
+                        let form = new FormData(formDiv);
+                        let parameters = [];
+                        let commandObject = {};
+                        for (let parameter of result.params) {
+                            let commandParameterObject = {
+                                'parameterName': parameter.parameterName,
+                                'parameterValue': form.get(parameter.parameterName)
+                            };
+
+                            console.log(commandParameterObject);
+                            parameters.push(commandParameterObject);
+                        };
+                        console.log('logging parameters array');
+                        console.log(parameters);
+
+                        commandObject['commandId'] = result.commandId;
+                        commandObject['key'] = result.key;
+                        commandObject['value'] = result.value;
+                        commandObject['_id'] = result._id;
+                        commandObject['params'] = parameters;
+
+                        console.log('logging commandObject');
+                        console.log(commandObject);
+
+
+                        console.log(JSON.stringify(commandObject));
+                        $.ajax({
+                            url: 'https://localhost:44353/api/Command/RunCommand',
+                            method: 'post',
+                            data: JSON.stringify(commandObject),
+                            contentType: 'application/json',
+                            success: function (data) {
+                                console.log(data);
+                                let objData = JSON.parse(data);
+                                for (let key in objData) {
+
+                                    $("#ulDiv").append(`<li><span>'${key}' : '${objData[key]}'<span></li>`);
+                                }
+                                alert('request posted successfully');
+                            }
+                        });
+                    }
+
+                }
+            });
+        }
+
+        function bind(commands) {
+            alert('In bind');
+            $("#divResult").append(`<ul></ul>`);
+             
+            for (let command of commands) {
+                $("#divResult ul").append(`<li><a href="#" onclick="getCommand(${command.commandId})">${command.key}</a></li>`);
+            }
+        }
+
+    </script>
+}
